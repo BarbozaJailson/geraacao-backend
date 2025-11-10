@@ -16,7 +16,7 @@ public class CorsConfig {
                 registry.addMapping("/**") // permite todos os endpoints
                         .allowedOrigins(
                                 "http://localhost:5173",
-                                "http://localhost:5174"
+                                "https://gera-acao.vercel.app"
                         ) // permite seu front
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
