@@ -3,7 +3,6 @@ package br.com.belval.api.geraacao.service;
 import java.util.List;
 import java.util.stream.Collectors;
 import br.com.belval.api.geraacao.exception.ResourceNotFoundException;
-import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import br.com.belval.api.geraacao.dto.EstoqueResponseDTO;
@@ -27,8 +26,8 @@ public class EstoqueServiceImpl implements EstoqueService {
             throw new IllegalArgumentException("ID da instituição inválido");
         }
         List<Estoque> estoques = estoqueRepository.findByInstituicaoId(idInstituicao);
-        if (estoques == null || estoques.isEmpty()) {
-            throw new IllegalStateException("Nenhum estoque encontrado para a instituição com id " + idInstituicao);
+        if (estoques.isEmpty()) {
+            throw new ResourceNotFoundException("Nenhum estoque encontrado para a instituição com ID " + idInstituicao);
         }
         return estoques.stream()
                 .map(EstoqueResponseDTO::new)
@@ -39,7 +38,7 @@ public class EstoqueServiceImpl implements EstoqueService {
     @Override
     public EstoqueResponseDTO buscarEstoquePorId(Integer id) {
         Estoque estoque = estoqueRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Estoque com id: " + id + " não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Estoque com ID " + id + " não encontrado"));
         return new EstoqueResponseDTO(estoque);
     }
 }

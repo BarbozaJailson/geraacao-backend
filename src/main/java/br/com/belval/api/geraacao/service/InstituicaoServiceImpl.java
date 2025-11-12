@@ -8,8 +8,10 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import br.com.belval.api.geraacao.dto.UsuarioResponseDTO;
 import br.com.belval.api.geraacao.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -23,9 +25,15 @@ import jakarta.persistence.EntityNotFoundException;
 @Service
 public class InstituicaoServiceImpl implements InstituicaoService{
 
-    @Autowired
-    private InstituicaoRepository instituicaoRepository;
+    @Value("${app.base-url}")
+    private String baseUrl;
+    private final InstituicaoRepository instituicaoRepository;
     private static final String UPLOAD_DIR = "uploads/";
+
+    public InstituicaoServiceImpl(InstituicaoRepository instituicaoRepository) {
+        this.instituicaoRepository = instituicaoRepository;
+    }
+
     // Salvar uma nova instituição
     @Override
     public InstituicaoResponseDTO criarInstituicao(InstituicaoCreateDTO dto) {
@@ -45,8 +53,14 @@ public class InstituicaoServiceImpl implements InstituicaoService{
             instituicao.setUf(dto.getUf());
             instituicao.setAtivo(dto.isAtivo() != null ? dto.isAtivo() : true);
             instituicao.setImagem(fileName != null ? "/uploads/" + fileName : null);
+
             Instituicao novaInstituicao = instituicaoRepository.save(instituicao);
-            return new InstituicaoResponseDTO(novaInstituicao);
+
+            InstituicaoResponseDTO response = new InstituicaoResponseDTO(novaInstituicao);
+            if (response.getImagem() != null) {
+                response.setImagem(baseUrl + response.getImagem());
+            }
+            return response;
         } catch (IOException e) {
             throw new RuntimeException("Erro ao salvar imagem: " + e.getMessage(), e);
         } catch (Exception e) {
@@ -90,7 +104,13 @@ public class InstituicaoServiceImpl implements InstituicaoService{
                 instituicao.setImagem("/uploads/" + fileName);
             }
             Instituicao instituicaoAtualizada = instituicaoRepository.save(instituicao);
-            return new InstituicaoResponseDTO(instituicaoAtualizada);
+
+            InstituicaoResponseDTO response = new InstituicaoResponseDTO(instituicaoAtualizada);
+            if (response.getImagem() != null) {
+                response.setImagem(baseUrl + response.getImagem());
+            }
+            return response;
+
         } catch (IOException e) {
             throw new RuntimeException("Erro ao salvar imagem: " + e.getMessage(), e);
         } catch (EntityNotFoundException e) {
@@ -105,7 +125,7 @@ public class InstituicaoServiceImpl implements InstituicaoService{
         File uploadDir = new File(UPLOAD_DIR);
         if (!uploadDir.exists()) uploadDir.mkdirs();
         String fileName = System.currentTimeMillis() + "_" + imagem.getOriginalFilename();
-        Path uploadPath = Paths.get(UPLOAD_DIR).toAbsolutePath().normalize();
+        Path uploadPath = Paths.get(System.getProperty("user.dir"), UPLOAD_DIR).toAbsolutePath().normalize();
         Path filePath = uploadPath.resolve(fileName);
         Files.write(filePath, imagem.getBytes());
         return fileName;
@@ -115,17 +135,28 @@ public class InstituicaoServiceImpl implements InstituicaoService{
     public InstituicaoResponseDTO buscarPorId(Integer id) {
         Instituicao instituicao = instituicaoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Instituicao Com id: " + id + " não encontrado"));
-        return new InstituicaoResponseDTO(instituicao);
+        InstituicaoResponseDTO response = new InstituicaoResponseDTO(instituicao);
+
+        if (response.getImagem() != null) {
+            response.setImagem(baseUrl + response.getImagem());
+        }
+        return response;
     }
     // Busca todas as instituições
     @Override
     public List<InstituicaoResponseDTO> listarTodos(){
-        List<Instituicao> instituicao = instituicaoRepository.findAll();
-        if(instituicao.isEmpty()) {
+        List<Instituicao> instituicoes = instituicaoRepository.findAll();
+        if(instituicoes.isEmpty()) {
             throw new ResourceNotFoundException("Nenhuma Instituição encontrada");
         }
-        return instituicao.stream()
-                .map(InstituicaoResponseDTO::new)
+        return instituicoes.stream()
+                .map(inst -> {
+                    InstituicaoResponseDTO response = new InstituicaoResponseDTO(inst);
+                    if (response.getImagem() != null) {
+                        response.setImagem(baseUrl + response.getImagem());
+                    }
+                    return response;
+                })
                 .collect(Collectors.toList());
     }
 
@@ -136,7 +167,13 @@ public class InstituicaoServiceImpl implements InstituicaoService{
             throw new ResourceNotFoundException("Nenhuma instituição encontrada com o nome " + nome);
         }
         return instituicoes.stream()
-                .map(InstituicaoResponseDTO::new)
+                .map(i -> {
+                    InstituicaoResponseDTO response = new InstituicaoResponseDTO(i);
+                    if (response.getImagem() != null) {
+                        response.setImagem(baseUrl + response.getImagem());
+                    }
+                    return response;
+                })
                 .collect(Collectors.toList());
     }
     // Exclui instituição por id
@@ -152,7 +189,13 @@ public class InstituicaoServiceImpl implements InstituicaoService{
     public InstituicaoResponseDTO buscarPorCnpj(String cnpj) {
         Instituicao instituicao = instituicaoRepository.findByCnpj(cnpj)
                 .orElseThrow(() ->new  ResourceNotFoundException("Instituição com cnpj " + cnpj + " não encontrada"));
-        return new InstituicaoResponseDTO(instituicao);
+
+        InstituicaoResponseDTO response = new InstituicaoResponseDTO(instituicao);
+
+        if (response.getImagem() != null) {
+            response.setImagem(baseUrl + response.getImagem());
+        }
+        return response;
     }
 }
 

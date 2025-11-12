@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import br.com.belval.api.geraacao.exception.ResourceNotFoundException;
 import br.com.belval.api.geraacao.model.TipoUser;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -29,6 +30,9 @@ import jakarta.validation.Valid;
 
 @Service
 public class UsuarioServiceImpl implements UsuarioService{
+
+    @Value("${app.base-url}")
+    private String baseUrl;
 
     private static final String UPLOAD_DIR = "uploads/";
     @Autowired
@@ -78,7 +82,11 @@ public class UsuarioServiceImpl implements UsuarioService{
                 usuario.getInstituicoes().add(instituicao);
             }
             Usuario novoUsuario = usuarioRepository.save(usuario);
-            return new UsuarioResponseDTO(novoUsuario);
+            UsuarioResponseDTO response = new UsuarioResponseDTO(novoUsuario);
+            if (response.getImagem() != null) {
+                response.setImagem(baseUrl + response.getImagem());
+            }
+            return response;
         } catch (IOException e) {
             throw new RuntimeException("Erro ao salvar imagem: " + e.getMessage(), e);
         }
@@ -126,7 +134,11 @@ public class UsuarioServiceImpl implements UsuarioService{
                 usuario.setImagem("/uploads/" + fileName);
             }
             Usuario usuarioAtualizado = usuarioRepository.save(usuario);
-            return new UsuarioResponseDTO(usuarioAtualizado);
+            UsuarioResponseDTO response = new UsuarioResponseDTO(usuarioAtualizado);
+            if (response.getImagem() != null) {
+                response.setImagem(baseUrl + response.getImagem());
+            }
+            return response;
         } catch (IOException e) {
             throw new RuntimeException("Erro ao salvar imagem: " + e.getMessage(), e);
         } catch (EntityNotFoundException e) {
@@ -141,7 +153,7 @@ public class UsuarioServiceImpl implements UsuarioService{
         File uploadDir = new File(UPLOAD_DIR);
         if (!uploadDir.exists()) uploadDir.mkdirs();
         String fileName = System.currentTimeMillis() + "_" + imagem.getOriginalFilename();
-        Path uploadPath = Paths.get(UPLOAD_DIR).toAbsolutePath().normalize();
+        Path uploadPath = Paths.get(System.getProperty("user.dir"), UPLOAD_DIR).toAbsolutePath().normalize();
         Path filePath = uploadPath.resolve(fileName);
         Files.write(filePath, imagem.getBytes());
         return fileName;
@@ -151,7 +163,11 @@ public class UsuarioServiceImpl implements UsuarioService{
     public UsuarioResponseDTO buscarPorId(Integer id) {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario com id " + id + " não encontrado"));
-        return new UsuarioResponseDTO(usuario);
+        UsuarioResponseDTO response = new UsuarioResponseDTO(usuario);
+        if (response.getImagem() != null) {
+            response.setImagem(baseUrl + response.getImagem());
+        }
+        return response;
     }
     @Override
     @Transactional(readOnly = true)
@@ -161,7 +177,13 @@ public class UsuarioServiceImpl implements UsuarioService{
             throw new ResourceNotFoundException("Nenhum suario encontrado");
         }
         return usuario.stream()
-                .map(UsuarioResponseDTO::new)
+                .map(u -> {
+                    UsuarioResponseDTO dto = new UsuarioResponseDTO(u);
+                    if (dto.getImagem() != null) {
+                        dto.setImagem(baseUrl + dto.getImagem());
+                    }
+                    return dto;
+                })
                 .collect(Collectors.toList());
     }
     @Override
@@ -182,7 +204,13 @@ public class UsuarioServiceImpl implements UsuarioService{
             throw new ResourceNotFoundException("Nenhum usuário com tipo '" + tipoUser + "' encontrado");
         }
         return usuarios.stream()
-                .map(UsuarioResponseDTO::new)
+                .map(u -> {
+                    UsuarioResponseDTO dto = new UsuarioResponseDTO(u);
+                    if (dto.getImagem() != null) {
+                        dto.setImagem(baseUrl + dto.getImagem());
+                    }
+                    return dto;
+                })
                 .collect(Collectors.toList());
     }
     @Override
@@ -196,7 +224,13 @@ public class UsuarioServiceImpl implements UsuarioService{
             throw new ResourceNotFoundException("Nenhum usuario para a instituição com  id " + idInstituicao + " encontrado");
         }
         return usuarios.stream()
-                .map(UsuarioResponseDTO::new)
+                .map(u -> {
+                    UsuarioResponseDTO dto = new UsuarioResponseDTO(u);
+                    if (dto.getImagem() != null) {
+                        dto.setImagem(baseUrl + dto.getImagem());
+                    }
+                    return dto;
+                })
                 .collect(Collectors.toList());
     }
     @Override
@@ -233,7 +267,5 @@ public class UsuarioServiceImpl implements UsuarioService{
         return usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado para o e-mail: " + email));
     }
-
-
 }
 

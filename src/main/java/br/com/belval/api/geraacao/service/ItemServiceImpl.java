@@ -8,8 +8,10 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import br.com.belval.api.geraacao.dto.UsuarioResponseDTO;
 import br.com.belval.api.geraacao.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -24,12 +26,15 @@ import jakarta.persistence.EntityNotFoundException;
 @Service
 public class ItemServiceImpl implements ItemService{
 
+    @Value("${app.base-url}")
+    private String baseUrl;
+
     @Autowired
     private ItemRepository itemRepository;
 
     private static final String UPLOAD_DIR = "uploads/";
 
-    // Salva um item
+    // Criar novo item
     @Override
     @Transactional
     public ItemResponseDTO criarItem(ItemCreateDTO dto) {
@@ -47,7 +52,13 @@ public class ItemServiceImpl implements ItemService{
             item.setAtivo(dto.isAtivo() != null ? dto.isAtivo() : true);
             item.setImagem(fileName != null ? "/uploads/" + fileName : null);
             item = itemRepository.save(item);
-            return new ItemResponseDTO(item);
+
+            ItemResponseDTO response = new ItemResponseDTO(item);
+            if (response.getImagem() != null) {
+                response.setImagem(baseUrl + response.getImagem());
+            }
+            return response;
+
         }catch(IOException e) {
             throw new RuntimeException("Erro ao salvar imagem: " + e.getMessage(), e);
         } catch (Exception e) {
@@ -61,7 +72,7 @@ public class ItemServiceImpl implements ItemService{
     public ItemResponseDTO atualizarItem(Integer id, ItemUpdateDTO dto) {
         try {
             Item item = itemRepository.findById(id)
-                    .orElseThrow(() -> new EntityNotFoundException("Instituição com id " + id + " não encontrada"));
+                    .orElseThrow(() -> new EntityNotFoundException("Item com id " + id + " não encontrada"));
             if(dto.getDescricao() != null) {item.setDescricao(dto.getDescricao());}
             if(dto.getGenero() != null) {item.setGenero(dto.getGenero());}
             if(dto.getMaterial() != null) {item.setMaterial(dto.getMaterial());}
@@ -90,14 +101,18 @@ public class ItemServiceImpl implements ItemService{
             }
             // salva o item
             Item img = itemRepository.save(item);
-            return new ItemResponseDTO(img);
+            ItemResponseDTO response = new ItemResponseDTO(img);
+            if (response.getImagem() != null) {
+                response.setImagem(baseUrl + response.getImagem());
+            }
+            return response;
 
         }catch (IOException e) {
             throw new RuntimeException("Erro ao salvar imagem: " + e.getMessage(), e);
         } catch (ResourceNotFoundException e) {
             throw e;
         } catch (Exception e) {
-            throw new RuntimeException("Erro ao atualizar instituição: " + e.getMessage(), e);
+            throw new RuntimeException("Erro ao atualizar Imagem: " + e.getMessage(), e);
         }
     }
 
@@ -107,7 +122,7 @@ public class ItemServiceImpl implements ItemService{
         File uploadDir = new File(UPLOAD_DIR);
         if (!uploadDir.exists()) uploadDir.mkdirs();
         String fileName = System.currentTimeMillis() + "_" + imagem.getOriginalFilename();
-        Path uploadPath = Paths.get(UPLOAD_DIR).toAbsolutePath().normalize();
+        Path uploadPath = Paths.get(System.getProperty("user.dir"), UPLOAD_DIR).toAbsolutePath().normalize();
         Path filePath = uploadPath.resolve(fileName);
         Files.write(filePath, imagem.getBytes());
         return fileName;
@@ -119,20 +134,30 @@ public class ItemServiceImpl implements ItemService{
     public ItemResponseDTO buscarPorId(Integer id) {
         Item item = itemRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Item com id " + id + " não encontrado"));
-        return new ItemResponseDTO(item);
+        ItemResponseDTO response = new ItemResponseDTO(item);
+        if (response.getImagem() != null) {
+            response.setImagem(baseUrl + response.getImagem());
+        }
+        return response;
     }
 
     // Busca todos os itens
     @Override
     @Transactional(readOnly = true)
     public List<ItemResponseDTO> listarTodos(){
-        List<Item> item = itemRepository.findAll();
-        if(item.isEmpty()) {
+        List<Item> itens = itemRepository.findAll();
+        if(itens.isEmpty()) {
             throw new ResourceNotFoundException("Nenhum item encontrado");
         }
         //lista os itens
-        return item.stream()
-                .map(ItemResponseDTO::new)
+        return itens.stream()
+                .map(item -> {
+                    ItemResponseDTO response = new ItemResponseDTO(item);
+                    if (response.getImagem() != null) {
+                        response.setImagem(baseUrl + response.getImagem());
+                    }
+                    return response;
+                })
                 .collect(Collectors.toList());
     }
 

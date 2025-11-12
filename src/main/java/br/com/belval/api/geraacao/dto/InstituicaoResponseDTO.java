@@ -94,6 +94,8 @@ public class InstituicaoResponseDTO {
         return imagem;
     }
 
+    public void setImagem(String imagem) {this.imagem = imagem;}
+
     public LocalDate getData() {
         return data;
     }

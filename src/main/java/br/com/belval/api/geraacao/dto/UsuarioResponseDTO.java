@@ -6,8 +6,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import br.com.belval.api.geraacao.model.Usuario;
+import org.springframework.beans.factory.annotation.Value;
 
 public class UsuarioResponseDTO {
+
+    @Value("${app.base-url}")
+    private String baseUrl;
 
     private Integer id;
     private String nome;
@@ -58,6 +62,7 @@ public class UsuarioResponseDTO {
     public String getCpf() { return cpf; }
     public String getEmail() { return email; }
     public String getImagem() { return imagem; }
+    public void setImagem(String imagem) {this.imagem = imagem;}
     public LocalDate getDataNascimento() { return dataNascimento; }
     public String getCep() { return cep; }
     public String getTipoLogradouro() { return tipoLogradouro; }

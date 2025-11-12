@@ -48,6 +48,8 @@ public class ItemResponseDTO {
 
     public String getImagem() {return imagem;}
 
+    public void setImagem(String imagem) {this.imagem = imagem;}
+
     public Boolean isAtivo() {return ativo;}
 }
 
