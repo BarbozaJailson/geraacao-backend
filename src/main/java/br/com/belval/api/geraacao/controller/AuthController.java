@@ -10,6 +10,7 @@ import br.com.belval.api.geraacao.service.UsuarioService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +24,8 @@ import static br.com.belval.api.geraacao.utils.ResponseUtil.buildResponse;
 @RequestMapping("/api/auth")
 public class AuthController {
 
+    @Value("${app.base-url}")
+    private String baseUrl;
     @Autowired
     private UsuarioService usuarioService;
     @Autowired
@@ -32,12 +35,14 @@ public class AuthController {
 
     @Autowired
     private JwtUtil jwtUtil;
+
     //Salvar Login
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginDTO dto) {
         try {
             Usuario usuarioEntity = usuarioService.loginEntity(dto.getLogin(), dto.getSenha(), dto.getCliente());
-            UsuarioResponseDTO usuarioDTO = new UsuarioResponseDTO(usuarioEntity);
+            UsuarioResponseDTO usuarioDTO = new UsuarioResponseDTO(usuarioEntity, baseUrl);
+            System.out.println(usuarioDTO.getInstituicaoImagem());
             Integer instituicaoId = usuarioDTO.getInstituicaoId();
             String accessToken = jwtUtil.generateToken(
                     usuarioEntity.getEmail(),
@@ -69,7 +74,7 @@ public class AuthController {
     }
 
     //Salvar Usuario
-    @PostMapping(value = "/register",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> register(@ModelAttribute @Valid UsuarioCreateDTO dto) {
         try {
             UsuarioResponseDTO usuario = usuarioService.criarUsuario(dto);

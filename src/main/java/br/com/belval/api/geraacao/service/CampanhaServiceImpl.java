@@ -3,6 +3,7 @@ package br.com.belval.api.geraacao.service;
 import br.com.belval.api.geraacao.dto.CampanhaCreateDTO;
 import br.com.belval.api.geraacao.dto.CampanhaResponseDTO;
 import br.com.belval.api.geraacao.dto.CampanhaUpdateDTO;
+import br.com.belval.api.geraacao.dto.RequisicaoResponseDTO;
 import br.com.belval.api.geraacao.exception.ResourceNotFoundException;
 import br.com.belval.api.geraacao.model.Campanha;
 import br.com.belval.api.geraacao.model.Instituicao;
@@ -13,6 +14,7 @@ import br.com.belval.api.geraacao.repository.InstituicaoRepository;
 import br.com.belval.api.geraacao.repository.ItemRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
@@ -20,6 +22,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 @Service
 public class CampanhaServiceImpl implements CampanhaService {
+
+    @Value("${app.base-url}")
+    private String baseUrl;
     private static final Logger logger = LoggerFactory.getLogger(CampanhaServiceImpl.class);
     private final CampanhaRepository campanhaRepository;
     private final InstituicaoRepository instituicaoRepository;
@@ -38,9 +43,15 @@ public class CampanhaServiceImpl implements CampanhaService {
             if(campanhas.isEmpty()) {
                 throw new ResourceNotFoundException("Nenhuma campanha encontrada");
             }
-            return campanhas.stream()
-                    .map(CampanhaResponseDTO::new)
-                    .collect(Collectors.toList());
+        return campanhas.stream()
+                .map(camp -> {
+                    CampanhaResponseDTO response = new CampanhaResponseDTO(camp);
+                    if (response.getItemImagem() != null) {
+                        response.setItemImagem(baseUrl + response.getItemImagem());
+                    }
+                    return response;
+                })
+                .collect(Collectors.toList());
     }
     @Transactional(readOnly = true)
     @Override
@@ -49,16 +60,27 @@ public class CampanhaServiceImpl implements CampanhaService {
             if(campanhas.isEmpty()) {
                 throw new ResourceNotFoundException("Nenhuma campanha encontrada para a instituição com id: " + instituicaoId);
             }
-            return campanhas.stream()
-                    .map(CampanhaResponseDTO::new)
-                    .collect(Collectors.toList());
+        return campanhas.stream()
+                .map(camp -> {
+                    CampanhaResponseDTO response = new CampanhaResponseDTO(camp);
+                    if (response.getItemImagem() != null) {
+                        response.setItemImagem(baseUrl + response.getItemImagem());
+                    }
+                    return response;
+                })
+                .collect(Collectors.toList());
     }
     @Transactional(readOnly = true)
     @Override
     public CampanhaResponseDTO findById(Integer id) {
         Campanha campanha = campanhaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Campanha com id " + id + " não encontrado"));
-        return new CampanhaResponseDTO(campanha);
+
+        CampanhaResponseDTO response = new CampanhaResponseDTO(campanha);
+        if (response.getItemImagem() != null) {
+            response.setItemImagem(baseUrl + response.getItemImagem());
+        }
+        return response;
     }
     @Transactional
     @Override
@@ -94,7 +116,11 @@ public class CampanhaServiceImpl implements CampanhaService {
                 "Saída de campanha: " + dto.getDescricao()
         );
         // 4 - Retorna DTO
-        return new CampanhaResponseDTO(campanha);
+        CampanhaResponseDTO response = new CampanhaResponseDTO(campanha);
+        if (response.getItemImagem() != null) {
+            response.setItemImagem(baseUrl + response.getItemImagem());
+        }
+        return response;
     }
     @Transactional
     @Override
@@ -126,8 +152,12 @@ public class CampanhaServiceImpl implements CampanhaService {
                 campanhaDTO.getQuantidade()
         );
         if (campanhaDTO.getQuantidade() != null) {campanha.setQuantidade(campanhaDTO.getQuantidade());}
-        campanhaRepository.save(campanha);
-        return new CampanhaResponseDTO(campanha);
+        Campanha newCampanha = campanhaRepository.save(campanha);
+        CampanhaResponseDTO response = new CampanhaResponseDTO(newCampanha);
+        if (response.getItemImagem() != null) {
+            response.setItemImagem(baseUrl + response.getItemImagem());
+        }
+        return response;
     }
     @Transactional
     @Override

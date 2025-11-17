@@ -59,6 +59,7 @@ public class UsuarioServiceImpl implements UsuarioService{
             if (dto.getImagem() != null && !dto.getImagem().isEmpty()) {
                 fileName = salvarImagem(dto.getImagem());
             }
+            System.out.println("Imagem recebida: " + dto.getImagem());
             Usuario usuario = new Usuario();
             usuario.setBairro(dto.getBairro());
             usuario.setCep(dto.getCep());
@@ -82,10 +83,7 @@ public class UsuarioServiceImpl implements UsuarioService{
                 usuario.getInstituicoes().add(instituicao);
             }
             Usuario novoUsuario = usuarioRepository.save(usuario);
-            UsuarioResponseDTO response = new UsuarioResponseDTO(novoUsuario);
-            if (response.getImagem() != null) {
-                response.setImagem(baseUrl + response.getImagem());
-            }
+            UsuarioResponseDTO response = new UsuarioResponseDTO(novoUsuario, baseUrl);
             return response;
         } catch (IOException e) {
             throw new RuntimeException("Erro ao salvar imagem: " + e.getMessage(), e);
@@ -134,10 +132,7 @@ public class UsuarioServiceImpl implements UsuarioService{
                 usuario.setImagem("/uploads/" + fileName);
             }
             Usuario usuarioAtualizado = usuarioRepository.save(usuario);
-            UsuarioResponseDTO response = new UsuarioResponseDTO(usuarioAtualizado);
-            if (response.getImagem() != null) {
-                response.setImagem(baseUrl + response.getImagem());
-            }
+            UsuarioResponseDTO response = new UsuarioResponseDTO(usuarioAtualizado, baseUrl);
             return response;
         } catch (IOException e) {
             throw new RuntimeException("Erro ao salvar imagem: " + e.getMessage(), e);
@@ -163,10 +158,7 @@ public class UsuarioServiceImpl implements UsuarioService{
     public UsuarioResponseDTO buscarPorId(Integer id) {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario com id " + id + " não encontrado"));
-        UsuarioResponseDTO response = new UsuarioResponseDTO(usuario);
-        if (response.getImagem() != null) {
-            response.setImagem(baseUrl + response.getImagem());
-        }
+        UsuarioResponseDTO response = new UsuarioResponseDTO(usuario, baseUrl);
         return response;
     }
     @Override
@@ -178,10 +170,10 @@ public class UsuarioServiceImpl implements UsuarioService{
         }
         return usuario.stream()
                 .map(u -> {
-                    UsuarioResponseDTO dto = new UsuarioResponseDTO(u);
-                    if (dto.getImagem() != null) {
-                        dto.setImagem(baseUrl + dto.getImagem());
-                    }
+                    UsuarioResponseDTO dto = new UsuarioResponseDTO(u, baseUrl);
+//                    if (dto.getImagem() != null) {
+//                        dto.setImagem(baseUrl + dto.getImagem());
+//                    }
                     return dto;
                 })
                 .collect(Collectors.toList());
@@ -205,10 +197,10 @@ public class UsuarioServiceImpl implements UsuarioService{
         }
         return usuarios.stream()
                 .map(u -> {
-                    UsuarioResponseDTO dto = new UsuarioResponseDTO(u);
-                    if (dto.getImagem() != null) {
-                        dto.setImagem(baseUrl + dto.getImagem());
-                    }
+                    UsuarioResponseDTO dto = new UsuarioResponseDTO(u, baseUrl);
+//                    if (dto.getImagem() != null) {
+//                        dto.setImagem(baseUrl + dto.getImagem());
+//                    }
                     return dto;
                 })
                 .collect(Collectors.toList());
@@ -225,10 +217,10 @@ public class UsuarioServiceImpl implements UsuarioService{
         }
         return usuarios.stream()
                 .map(u -> {
-                    UsuarioResponseDTO dto = new UsuarioResponseDTO(u);
-                    if (dto.getImagem() != null) {
-                        dto.setImagem(baseUrl + dto.getImagem());
-                    }
+                    UsuarioResponseDTO dto = new UsuarioResponseDTO(u, baseUrl);
+//                    if (dto.getImagem() != null) {
+//                        dto.setImagem(baseUrl + dto.getImagem());
+//                    }
                     return dto;
                 })
                 .collect(Collectors.toList());

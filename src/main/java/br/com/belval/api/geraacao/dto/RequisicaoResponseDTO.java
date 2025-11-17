@@ -115,6 +115,7 @@ public class RequisicaoResponseDTO {
     public String getItemMaterial(){return itemMaterial;}
     public String getItemDescricao(){return itemDescricao;}
     public String getItemImagem() {return itemImagem;}
+    public void setItemImagem(String itemImagem) {this.itemImagem = itemImagem;}
 }
 
 

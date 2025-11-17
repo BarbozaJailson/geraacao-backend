@@ -23,5 +23,5 @@ public interface DoacaoService {
 
     List<DoacaoResponseDTO> buscarPorInstituicao(@PathVariable Long idInstituicao);
 
-    Doacao atualizarStatus(Integer id, String status);
+    DoacaoResponseDTO atualizarStatus(Integer id, String status);
 }

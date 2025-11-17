@@ -56,10 +56,10 @@ public class InstituicaoServiceImpl implements InstituicaoService{
 
             Instituicao novaInstituicao = instituicaoRepository.save(instituicao);
 
-            InstituicaoResponseDTO response = new InstituicaoResponseDTO(novaInstituicao);
-            if (response.getImagem() != null) {
-                response.setImagem(baseUrl + response.getImagem());
-            }
+            InstituicaoResponseDTO response = new InstituicaoResponseDTO(novaInstituicao, baseUrl);
+//            if (response.getImagem() != null) {
+//                response.setImagem(baseUrl + response.getImagem());
+//            }
             return response;
         } catch (IOException e) {
             throw new RuntimeException("Erro ao salvar imagem: " + e.getMessage(), e);
@@ -105,10 +105,10 @@ public class InstituicaoServiceImpl implements InstituicaoService{
             }
             Instituicao instituicaoAtualizada = instituicaoRepository.save(instituicao);
 
-            InstituicaoResponseDTO response = new InstituicaoResponseDTO(instituicaoAtualizada);
-            if (response.getImagem() != null) {
-                response.setImagem(baseUrl + response.getImagem());
-            }
+            InstituicaoResponseDTO response = new InstituicaoResponseDTO(instituicaoAtualizada, baseUrl);
+//            if (response.getImagem() != null) {
+//                response.setImagem(baseUrl + response.getImagem());
+//            }
             return response;
 
         } catch (IOException e) {
@@ -135,11 +135,11 @@ public class InstituicaoServiceImpl implements InstituicaoService{
     public InstituicaoResponseDTO buscarPorId(Integer id) {
         Instituicao instituicao = instituicaoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Instituicao Com id: " + id + " não encontrado"));
-        InstituicaoResponseDTO response = new InstituicaoResponseDTO(instituicao);
+        InstituicaoResponseDTO response = new InstituicaoResponseDTO(instituicao, baseUrl);
 
-        if (response.getImagem() != null) {
-            response.setImagem(baseUrl + response.getImagem());
-        }
+//        if (response.getImagem() != null) {
+//            response.setImagem(baseUrl + response.getImagem());
+//        }
         return response;
     }
     // Busca todas as instituições
@@ -151,10 +151,10 @@ public class InstituicaoServiceImpl implements InstituicaoService{
         }
         return instituicoes.stream()
                 .map(inst -> {
-                    InstituicaoResponseDTO response = new InstituicaoResponseDTO(inst);
-                    if (response.getImagem() != null) {
-                        response.setImagem(baseUrl + response.getImagem());
-                    }
+                    InstituicaoResponseDTO response = new InstituicaoResponseDTO(inst, baseUrl);
+//                    if (response.getImagem() != null) {
+//                        response.setImagem(baseUrl + response.getImagem());
+//                    }
                     return response;
                 })
                 .collect(Collectors.toList());
@@ -168,10 +168,10 @@ public class InstituicaoServiceImpl implements InstituicaoService{
         }
         return instituicoes.stream()
                 .map(i -> {
-                    InstituicaoResponseDTO response = new InstituicaoResponseDTO(i);
-                    if (response.getImagem() != null) {
-                        response.setImagem(baseUrl + response.getImagem());
-                    }
+                    InstituicaoResponseDTO response = new InstituicaoResponseDTO(i, baseUrl);
+//                    if (response.getImagem() != null) {
+//                        response.setImagem(baseUrl + response.getImagem());
+//                    }
                     return response;
                 })
                 .collect(Collectors.toList());
@@ -190,11 +190,11 @@ public class InstituicaoServiceImpl implements InstituicaoService{
         Instituicao instituicao = instituicaoRepository.findByCnpj(cnpj)
                 .orElseThrow(() ->new  ResourceNotFoundException("Instituição com cnpj " + cnpj + " não encontrada"));
 
-        InstituicaoResponseDTO response = new InstituicaoResponseDTO(instituicao);
+        InstituicaoResponseDTO response = new InstituicaoResponseDTO(instituicao, baseUrl);
 
-        if (response.getImagem() != null) {
-            response.setImagem(baseUrl + response.getImagem());
-        }
+//        if (response.getImagem() != null) {
+//            response.setImagem(baseUrl + response.getImagem());
+//        }
         return response;
     }
 }

@@ -3,6 +3,7 @@ package br.com.belval.api.geraacao.service;
 import br.com.belval.api.geraacao.dto.DoacaoCreateDTO;
 import br.com.belval.api.geraacao.dto.DoacaoResponseDTO;
 import br.com.belval.api.geraacao.dto.DoacaoUpdateDTO;
+import br.com.belval.api.geraacao.dto.RequisicaoResponseDTO;
 import br.com.belval.api.geraacao.exception.ResourceNotFoundException;
 import br.com.belval.api.geraacao.model.Doacao;
 import br.com.belval.api.geraacao.model.Requisicao;
@@ -11,18 +12,19 @@ import br.com.belval.api.geraacao.model.Usuario;
 import br.com.belval.api.geraacao.repository.DoacaoRepository;
 import br.com.belval.api.geraacao.repository.RequisicaoRepository;
 import br.com.belval.api.geraacao.repository.UsuarioRepository;
-import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PathVariable;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
 public class DoacaoServiceImpl implements DoacaoService{
 
+    @Value("${app.base-url}")
+    private String baseUrl;
     @Autowired
     private DoacaoRepository doacaoRepository;
     @Autowired
@@ -58,7 +60,11 @@ public class DoacaoServiceImpl implements DoacaoService{
         requisicao.adicionarDoacao(dto.getQuantidade());
         requisicaoRepository.save(requisicao);
 
-        return new DoacaoResponseDTO(doacaoSalva);
+        DoacaoResponseDTO response = new DoacaoResponseDTO(doacaoSalva);
+        if (response.getItemImagem() != null) {
+            response.setItemImagem(baseUrl + response.getItemImagem());
+        }
+        return response;
     }
 
     // Atualizar doação por id
@@ -112,9 +118,12 @@ public class DoacaoServiceImpl implements DoacaoService{
             }
         }
 
-
-        doacao = doacaoRepository.save(doacao);
-        return new DoacaoResponseDTO(doacao);
+        Doacao newDoacao = doacaoRepository.save(doacao);
+        DoacaoResponseDTO response = new DoacaoResponseDTO(newDoacao);
+        if (response.getItemImagem() != null) {
+            response.setItemImagem(baseUrl + response.getItemImagem());
+        }
+        return response;
     }
 
     // buscar doações por id
@@ -123,7 +132,11 @@ public class DoacaoServiceImpl implements DoacaoService{
     public DoacaoResponseDTO buscarPorId(Integer id) {
         Doacao doacao = doacaoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Doação com id " + id + " não encontrada."));
-        return new DoacaoResponseDTO(doacao);
+        DoacaoResponseDTO response = new DoacaoResponseDTO(doacao);
+        if (response.getItemImagem() != null) {
+            response.setItemImagem(baseUrl + response.getItemImagem());
+        }
+        return response;
     }
 
     // Buscar todas as doações
@@ -135,7 +148,13 @@ public class DoacaoServiceImpl implements DoacaoService{
             throw new ResourceNotFoundException("Nenhuma doação encontrada");
         }
         return doacoes.stream()
-                .map(DoacaoResponseDTO::new)
+                .map(doac -> {
+                    DoacaoResponseDTO response = new DoacaoResponseDTO(doac);
+                    if (response.getItemImagem() != null) {
+                        response.setItemImagem(baseUrl + response.getItemImagem());
+                    }
+                    return response;
+                })
                 .collect(Collectors.toList());
     }
 
@@ -153,12 +172,18 @@ public class DoacaoServiceImpl implements DoacaoService{
     @Override
     @Transactional(readOnly = true)
     public List<DoacaoResponseDTO> buscarPorDoador(@PathVariable Integer id) {
-        List<Doacao> doacao = doacaoRepository.findByUsuarioId(id);
-        if(doacao.isEmpty()) {
+        List<Doacao> doacoes = doacaoRepository.findByUsuarioId(id);
+        if(doacoes.isEmpty()) {
             throw new ResourceNotFoundException("Doacao do usuario com id " + id + " não encontrada");
         }
-        return doacao.stream()
-                .map(DoacaoResponseDTO::new)
+        return doacoes.stream()
+                .map(doac -> {
+                    DoacaoResponseDTO response = new DoacaoResponseDTO(doac);
+                    if (response.getItemImagem() != null) {
+                        response.setItemImagem(baseUrl + response.getItemImagem());
+                    }
+                    return response;
+                })
                 .collect(Collectors.toList());
     }
 
@@ -166,35 +191,29 @@ public class DoacaoServiceImpl implements DoacaoService{
     @Override
     @Transactional(readOnly = true)
     public List<DoacaoResponseDTO> buscarPorInstituicao(@PathVariable Long idInstituicao) {
-        List<Doacao> doacao = doacaoRepository.findByInstituicaoId(idInstituicao);
-        if(doacao.isEmpty()) {
+        List<Doacao> doacoes = doacaoRepository.findByInstituicaoId(idInstituicao);
+        if(doacoes.isEmpty()) {
             throw new ResourceNotFoundException("Doacao da instituicao com id " + idInstituicao + " não encontrado");
         }
-        return doacao.stream()
-                .map(DoacaoResponseDTO::new)
+        return doacoes.stream()
+                .map(doac -> {
+                    DoacaoResponseDTO response = new DoacaoResponseDTO(doac);
+                    if (response.getItemImagem() != null) {
+                        response.setItemImagem(baseUrl + response.getItemImagem());
+                    }
+                       return response;
+                })
                 .collect(Collectors.toList());
     }
 
     @Transactional
-    public Doacao atualizarStatus(Integer id, String status) {
+    public DoacaoResponseDTO atualizarStatus(Integer id, String status) {
         Doacao doacao = doacaoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Doação não encontrada: " + id));
 
         String statusAnterior = doacao.getStatus();
         doacao.setStatus(status);
         doacao = doacaoRepository.save(doacao);
-
-        // Se a doação foi finalizada e antes não estava finalizada, entra no estoque
-//        if (status.equalsIgnoreCase("Finalizada") && !statusAnterior.equalsIgnoreCase("Finalizada")) {
-//            movimentacaoEstoqueService.criarMovimentacao(
-//                    doacao.getRequisicao().getItem().getId(),
-//                    doacao.getRequisicao().getInstituicao().getId(),
-//                    doacao.getRequisicao().getId(),
-//                    doacao.getId(),
-//                    TipoMovimentacao.ENTRADA,
-//                    doacao.getQuantidade()
-//            );
-//        }
 
         if (status.equalsIgnoreCase("Cancelada") && !statusAnterior.equalsIgnoreCase("Cancelada")) {
             // Reverte estoque
@@ -208,7 +227,11 @@ public class DoacaoServiceImpl implements DoacaoService{
             );
         }
 
-        return doacao;
+        DoacaoResponseDTO response = new DoacaoResponseDTO(doacao);
+        if (response.getItemImagem() != null) {
+            response.setItemImagem(baseUrl + response.getItemImagem());
+        }
+        return response;
     }
 
 }

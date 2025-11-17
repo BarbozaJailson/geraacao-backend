@@ -63,7 +63,7 @@ public class DoacaoController {
             @PathVariable Integer id,
             @PathVariable String status) { // <- agora usa PathVariable
         try {
-            Doacao doacaoAtualizada = doacaoService.atualizarStatus(id, status);
+            DoacaoResponseDTO doacaoAtualizada = doacaoService.atualizarStatus(id, status);
             return ResponseEntity.ok(doacaoAtualizada);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());

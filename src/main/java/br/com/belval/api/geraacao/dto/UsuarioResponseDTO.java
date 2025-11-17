@@ -10,9 +10,6 @@ import org.springframework.beans.factory.annotation.Value;
 
 public class UsuarioResponseDTO {
 
-    @Value("${app.base-url}")
-    private String baseUrl;
-
     private Integer id;
     private String nome;
     private String cpf;
@@ -31,13 +28,22 @@ public class UsuarioResponseDTO {
     private Boolean ativo;
     private List<InstituicaoResponseDTO> instituicoes;
 
-    public UsuarioResponseDTO(Usuario usuario) {
+    public UsuarioResponseDTO(Usuario usuario, String baseUrl) {
         this.id = usuario.getId();
         this.nome = usuario.getNome();
         this.cpf = usuario.getCpf();
         this.email = usuario.getEmail();
-        this.imagem = usuario.getImagem();
-        this.dataNascimento = usuario.getDataNascimento();
+        String userImg = usuario.getImagem();
+        if (userImg != null && !userImg.isBlank()) {
+            if (userImg.startsWith("http")) {
+                this.imagem = userImg;
+            } else {
+                if (!userImg.startsWith("/")) userImg = "/" + userImg;
+                this.imagem = baseUrl + userImg;
+            }
+        } else {
+            this.imagem = null;
+        }        this.dataNascimento = usuario.getDataNascimento();
         this.cep = usuario.getCep();
         this.tipoLogradouro = usuario.getTipoLogradouro();
         this.logradouro = usuario.getLogradouro();
@@ -45,12 +51,12 @@ public class UsuarioResponseDTO {
         this.cidade = usuario.getCidade();
         this.uf = usuario.getUf();
         this.numero = usuario.getNumero();
-        this.tipoUser = usuario.getTipoUser() != null ? usuario.getTipoUser().name() : null; // converte enum para String
+        this.tipoUser = usuario.getTipoUser() != null ? usuario.getTipoUser().name() : null;
         this.telefone = usuario.getTelefone();
         this.ativo = usuario.isAtivo();
         this.instituicoes = usuario.getInstituicoes() != null
                 ? usuario.getInstituicoes().stream()
-                .map(InstituicaoResponseDTO::new)
+                .map(i -> new InstituicaoResponseDTO(i, baseUrl))
                 .collect(Collectors.toList())
                 : Collections.emptyList();
     }
@@ -62,7 +68,7 @@ public class UsuarioResponseDTO {
     public String getCpf() { return cpf; }
     public String getEmail() { return email; }
     public String getImagem() { return imagem; }
-    public void setImagem(String imagem) {this.imagem = imagem;}
+    public void setImagem(String imagem) { this.imagem = imagem; }
     public LocalDate getDataNascimento() { return dataNascimento; }
     public String getCep() { return cep; }
     public String getTipoLogradouro() { return tipoLogradouro; }
@@ -71,31 +77,27 @@ public class UsuarioResponseDTO {
     public String getCidade() { return cidade; }
     public String getUf() { return uf; }
     public String getNumero() { return numero; }
-    public String getTipoUser() { return tipoUser; }
+    public String getTipoUser() { return typeUser(); }
+    private String typeUser() { return tipoUser; }
     public String getTelefone() { return telefone; }
     public Boolean isAtivo() { return ativo; }
     public List<InstituicaoResponseDTO> getInstituicoes() { return instituicoes; }
 
-    // ==================== Métodos adicionais ====================
-
-    /**
-     * Retorna o ID da instituição principal (primeira da lista)
-     */
     public Integer getInstituicaoId() {
         if (instituicoes != null && !instituicoes.isEmpty()) {
             return instituicoes.get(0).getId();
         }
         return null;
     }
-
-    /**
-     * Retorna a lista de IDs de todas as instituições
-     */
+    public String getInstituicaoImagem() {
+        if (instituicoes != null && !instituicoes.isEmpty()) {
+            return instituicoes.get(0).getImagem();
+        }
+        return null;
+    }
     public List<Integer> getInstituicaoIds() {
         if (instituicoes != null) {
-            return instituicoes.stream()
-                    .map(InstituicaoResponseDTO::getId)
-                    .collect(Collectors.toList());
+            return instituicoes.stream().map(InstituicaoResponseDTO::getId).collect(Collectors.toList());
         }
         return Collections.emptyList();
     }

@@ -4,8 +4,10 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import br.com.belval.api.geraacao.dto.InstituicaoResponseDTO;
 import br.com.belval.api.geraacao.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +25,8 @@ import jakarta.persistence.EntityNotFoundException;
 @Service
 public class RequisicaoServiceImpl implements RequisicaoService{
 
+    @Value("${app.base-url}")
+    private String baseUrl;
     @Autowired
     private RequisicaoRepository requisicaoRepository;
     @Autowired
@@ -44,8 +48,12 @@ public class RequisicaoServiceImpl implements RequisicaoService{
         requisicao.setAtivo(dto.isAtivo() != null ? dto.isAtivo() : true);
         requisicao.setInstituicao(istituicao);
         requisicao.setItem(item);
-        requisicao = requisicaoRepository.save(requisicao);
-        return new RequisicaoResponseDTO(requisicao);
+        Requisicao Novarequisicao = requisicaoRepository.save(requisicao);
+        RequisicaoResponseDTO response = new RequisicaoResponseDTO(Novarequisicao);
+        if (response.getItemImagem() != null) {
+            response.setItemImagem(baseUrl + response.getItemImagem());
+        }
+        return response;
     }
     // Atualizar requisição por id
     @Override
@@ -67,8 +75,12 @@ public class RequisicaoServiceImpl implements RequisicaoService{
             requisicao.setItem(item);
         }
         requisicao.setData(LocalDate.now());
-        requisicao = requisicaoRepository.save(requisicao);
-        return new RequisicaoResponseDTO(requisicao);
+        Requisicao Novarequisicao = requisicaoRepository.save(requisicao);
+        RequisicaoResponseDTO response = new RequisicaoResponseDTO(Novarequisicao);
+        if (response.getItemImagem() != null) {
+            response.setItemImagem(baseUrl + response.getItemImagem());
+        }
+        return response;
     }
 
     // Buscar as requisições por id
@@ -77,7 +89,12 @@ public class RequisicaoServiceImpl implements RequisicaoService{
     public RequisicaoResponseDTO buscarPorId(Integer id) {
         Requisicao requisicao = requisicaoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Requisição com id " + id + " não encontrado"));
-        return new RequisicaoResponseDTO(requisicao);
+
+        RequisicaoResponseDTO response = new RequisicaoResponseDTO(requisicao);
+        if (response.getItemImagem() != null) {
+            response.setItemImagem(baseUrl + response.getItemImagem());
+        }
+        return response;
 
     }
 
@@ -90,7 +107,13 @@ public class RequisicaoServiceImpl implements RequisicaoService{
             throw new ResourceNotFoundException("Nenhuma requisição com id encontrada");
         }
         return requisicao.stream()
-                .map(RequisicaoResponseDTO::new)
+                .map(req -> {
+                    RequisicaoResponseDTO response = new RequisicaoResponseDTO(req);
+                    if (response.getItemImagem() != null) {
+                        response.setItemImagem(baseUrl + response.getItemImagem());
+                    }
+                    return response;
+                })
                 .collect(Collectors.toList());
     }
 
@@ -113,9 +136,13 @@ public class RequisicaoServiceImpl implements RequisicaoService{
             throw new ResourceNotFoundException("Nenhuma Requisicao com id " + idInstituicao + " encontrada");
         }
         return requisicao.stream()
-                .map(RequisicaoResponseDTO::new)
+                .map(req -> {
+                    RequisicaoResponseDTO response = new RequisicaoResponseDTO(req);
+                    if (response.getItemImagem() != null) {
+                        response.setItemImagem(baseUrl + response.getItemImagem());
+                    }
+                    return response;
+                })
                 .collect(Collectors.toList());
     }
-
 }
-

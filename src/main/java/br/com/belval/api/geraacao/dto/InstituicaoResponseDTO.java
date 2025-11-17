@@ -23,7 +23,7 @@ public class InstituicaoResponseDTO {
     private LocalDate data;
     private Boolean ativo;
 
-    public InstituicaoResponseDTO(Instituicao instituicao) {
+    public InstituicaoResponseDTO(Instituicao instituicao, String baseUrl) {
         this.id = instituicao.getId();
         this.nome = instituicao.getNome();
         this.cnpj = instituicao.getCnpj();
@@ -36,70 +36,38 @@ public class InstituicaoResponseDTO {
         this.bairro = instituicao.getBairro();
         this.cidade = instituicao.getCidade();
         this.uf = instituicao.getUf();
-        this.imagem = instituicao.getImagem();
+        String img = instituicao.getImagem();
+        if (img != null && !img.isBlank()) {
+            // se já for URL completa, usa direto
+            if (img.startsWith("http")) {
+                this.imagem = img;
+            } else {
+                if (!img.startsWith("/")) img = "/" + img;
+                this.imagem = baseUrl + img;
+            }
+        } else {
+            this.imagem = null;
+        }
         this.data = instituicao.getData();
         this.ativo = instituicao.isAtivo();
     }
 
     // Getters e Setters
-    public Integer getId() {
-        return id;
-    }
-
-    public String getNome() {
-        return nome;
-    }
-
-    public String getCnpj() {
-        return cnpj;
-    }
-
-    public String getTelefone() {
-        return telefone;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public String getCep() {
-        return cep;
-    }
-
-    public String getTipoLogradouro() {
-        return tipoLogradouro;
-    }
-
-    public String getLogradouro() {
-        return logradouro;
-    }
-
-    public String getNumero() {
-        return numero;
-    }
-
-    public String getBairro() {
-        return bairro;
-    }
-
-    public String getCidade() {
-        return cidade;
-    }
-
-    public String getUf() {
-        return uf;
-    }
-
-    public String getImagem() {
-        return imagem;
-    }
-
-    public void setImagem(String imagem) {this.imagem = imagem;}
-
-    public LocalDate getData() {
-        return data;
-    }
-
+    public Integer getId() { return id; }
+    public String getNome() { return nome; }
+    public String getCnpj() { return cnpj; }
+    public String getTelefone() { return telefone; }
+    public String getEmail() { return email; }
+    public String getCep() { return cep; }
+    public String getTipoLogradouro() { return tipoLogradouro; }
+    public String getLogradouro() { return logradouro; }
+    public String getNumero() { return numero; }
+    public String getBairro() { return bairro; }
+    public String getCidade() { return cidade; }
+    public String getUf() { return uf; }
+    public String getImagem() { return imagem; }
+    public void setImagem(String imagem) { this.imagem = imagem; }
+    public LocalDate getData() { return data; }
     public Boolean isAtivo() { return ativo; }
 }
 
